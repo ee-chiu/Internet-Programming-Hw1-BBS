@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "my_function.h"
-
+ 
 using namespace std;
 
 const int MAX_SIZE = 1000;

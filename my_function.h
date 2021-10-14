@@ -14,7 +14,7 @@ int Socket(int family, int type, int protocol){
     }
 
     return sockfd;
-}
+} 
 
 int Read(int socket, void* buffer, unsigned int size){
     int r = read(socket, buffer, size);
