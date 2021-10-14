@@ -38,6 +38,17 @@ int Listen(int listenfd, int backlog){
     return 0;
 }
 
+int Accept(int listenfd){
+    int a = accept(listenfd, (struct sockaddr *) NULL, NULL);
+
+    if (a < 0){
+        perror("Accept error");
+        exit(0);
+    }
+
+    return a;
+}
+
 int Read(int socket, void* buffer, unsigned int size){
     int r = read(socket, buffer, size);
     if(r < 0){

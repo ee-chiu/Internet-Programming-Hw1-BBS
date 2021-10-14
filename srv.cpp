@@ -48,17 +48,9 @@ int main(int argc, char** argv){
     Bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
 
     Listen(listenfd, backlog);
-    /*if(listen(listenfd, backlog) < 0){
-        cout<<"listen error"<<endl;
-        exit(0);
-    }*/
 
     while(1){
-        connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
-        if(connfd < 0){
-            cout<<"accept error"<<endl;
-            exit(0);
-        }
+        connfd = Accept(listenfd);
 
         pid_t pid = -1;
         if((pid = fork()) == 0){
