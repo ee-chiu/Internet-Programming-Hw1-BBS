@@ -54,10 +54,11 @@ int main(int argc, char** argv){
 
         pid_t pid = -1;
         if((pid = fork()) == 0){
-            if (close(listenfd) < 0){
+            /*if (close(listenfd) < 0){
                 cout<<"close error"<<endl;
                 exit(0);
-            }
+            }*/
+            Close(listenfd);
 
             bbs_start(connfd);
             while(1){

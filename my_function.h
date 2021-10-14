@@ -49,6 +49,16 @@ int Accept(int listenfd){
     return a;
 }
 
+int Close(int listenfd){
+    int c = close(listenfd);
+    if (c < 0){
+        perror("Close error");
+        exit(0);
+    }
+
+    return 0;
+}
+
 int Read(int socket, void* buffer, unsigned int size){
     int r = read(socket, buffer, size);
     if(r < 0){
