@@ -16,6 +16,17 @@ int Socket(int family, int type, int protocol){
     return sockfd;
 } 
 
+int Bind(int listenfd, struct sockaddr * ptr_srv_addr, int size){
+    int b = bind(listenfd, ptr_srv_addr, size);
+
+    if(b < 0){
+        perror("Bind error");
+        exit(0);
+    }
+
+    return 0;
+}
+
 int Read(int socket, void* buffer, unsigned int size){
     int r = read(socket, buffer, size);
     if(r < 0){

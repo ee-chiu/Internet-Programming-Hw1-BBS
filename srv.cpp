@@ -45,7 +45,7 @@ int main(int argc, char** argv){
     srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     srv_addr.sin_port = htons(13);
 
-    if(bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr)) < 0){
+    if(Bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr)) < 0){
         perror("Bind error");
         exit(0);
     }
