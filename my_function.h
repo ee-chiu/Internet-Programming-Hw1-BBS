@@ -27,6 +27,17 @@ int Bind(int listenfd, struct sockaddr * ptr_srv_addr, int size){
     return 0;
 }
 
+int Listen(int listenfd, int backlog){
+    int l = listen(listenfd, backlog);
+    
+    if(l < 0){
+        perror("Listen error");
+        exit(0);
+    }
+
+    return 0;
+}
+
 int Read(int socket, void* buffer, unsigned int size){
     int r = read(socket, buffer, size);
     if(r < 0){

@@ -45,15 +45,13 @@ int main(int argc, char** argv){
     srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     srv_addr.sin_port = htons(13);
 
-    if(Bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr)) < 0){
-        perror("Bind error");
-        exit(0);
-    }
+    Bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
 
-    if(listen(listenfd, backlog) < 0){
+    Listen(listenfd, backlog);
+    /*if(listen(listenfd, backlog) < 0){
         cout<<"listen error"<<endl;
         exit(0);
-    }
+    }*/
 
     while(1){
         connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
