@@ -27,6 +27,15 @@ void get_command(int connfd){
     return;
 }
 
+void exit_bbs(int connfd){
+    snprintf(cli_buff, sizeof(cli_buff), "bye\n");
+    if (write(connfd, cli_buff, strlen(cli_buff)) < 0){
+        perror("Write error");
+        exit(0);
+    }
+    return;
+}
+
 int main(int argc, char** argv){
     const int family = AF_INET;
     const int type = SOCK_STREAM;
@@ -54,10 +63,6 @@ int main(int argc, char** argv){
 
         pid_t pid = -1;
         if((pid = fork()) == 0){
-            /*if (close(listenfd) < 0){
-                cout<<"close error"<<endl;
-                exit(0);
-            }*/
             Close(listenfd);
 
             bbs_start(connfd);
@@ -65,18 +70,19 @@ int main(int argc, char** argv){
                 get_command(connfd);
                 if(srv_buff[0] != 0){
                     printf("%s", srv_buff);
+                    if(strcmp(srv_buff, "exit\n") == 0){
+                    exit_bbs(connfd);
+                    break;
+                    }
                     memset(srv_buff, 0, sizeof(srv_buff));
                 }
             }
 
-            if(close(connfd) < 0){
-                cout<<"close error"<<endl;
-                exit(0);
-            }
+            Close(connfd);
             exit(0);
         }
 
-        close(connfd);
+        Close(connfd);
     }
 
     return 0;    
