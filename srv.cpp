@@ -126,6 +126,14 @@ void logout(int connfd){
     return;
 }
 
+void list_user(int connfd){
+    for(auto it = user2password.begin(); it != user2password.end(); it++){
+        snprintf(cli_buff, sizeof(cli_buff), "%s\n", it->first.c_str());
+        Write(connfd, cli_buff, strlen(cli_buff));
+    }
+    return;
+}
+
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
@@ -135,7 +143,10 @@ void bbs_main(int connfd){
             string command(srv_buff);
             command.pop_back();
             if(command == "exit"){
-                exit_bbs(connfd);
+                if(isLogin) {
+                    snprintf(cli_buff, sizeof(cli_buff), "Bye, %s.", user.c_str());
+                    Write(connfd, cli_buff, strlen(cli_buff));
+                }
                 break;
             }
 
@@ -144,6 +155,7 @@ void bbs_main(int connfd){
             else if(para[0] == "login") login(connfd, para);
             else if(para[0] == "whoami") who(connfd);
             else if(para[0] == "logout") logout(connfd);
+            else if(para[0] == "list-user") list_user(connfd);
             memset(srv_buff, 0, sizeof(srv_buff));
         }
     }
@@ -175,7 +187,8 @@ int main(int argc, char** argv){
     while(1){
         connfd = Accept(listenfd);
 
-        pid_t pid = -1;
+        bbs_main(connfd);
+        /*pid_t pid = -1;
         if((pid = fork()) == 0){
             Close(listenfd);
 
@@ -183,10 +196,9 @@ int main(int argc, char** argv){
             
             Close(connfd);
             exit(0);
-        }
+        }*/
 
         Close(connfd);
-        sleep(1);
     }
 
     return 0;    
