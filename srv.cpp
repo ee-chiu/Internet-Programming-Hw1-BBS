@@ -39,6 +39,8 @@ vector<string> split(string command){
             para.push_back(tmp);
             tmp.clear();
             i++;
+            while(command[i] == ' ')
+                i++;
             continue;
         }
         tmp += command[i];
@@ -56,7 +58,6 @@ void bbs_main(int connfd){
         if(srv_buff[0] != 0){
             string command(srv_buff);
             command.pop_back();
-            cout<<command<<endl;
             if(command == "exit"){
                 exit_bbs(connfd);
                 break;
