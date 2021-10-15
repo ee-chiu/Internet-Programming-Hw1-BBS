@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <map>
 #include "my_function.h"
  
 using namespace std;
 
+map<string, string> user2password;
 const int MAX_SIZE = 1000;
 char cli_buff[MAX_SIZE];
 char srv_buff[MAX_SIZE];
@@ -50,6 +52,23 @@ vector<string> split(string command){
     return para;
 }
 
+void reg(int connfd, vector<string> &para){
+    if(para.size() != 3){
+        write2cli(connfd, "Usage: register <username> <password>\n");
+        return;
+    }
+
+    auto itr = user2password.find(para[1]);
+    if(itr != user2password.end()){
+        write2cli(connfd, "Username is already used.\n");
+        return;
+    }
+
+    write2cli(connfd, "Register successfully.\n");
+    user2password[para[1]] = para[2];
+    return;
+}
+
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
@@ -64,9 +83,7 @@ void bbs_main(int connfd){
             }
 
             vector<string> para = split(command);
-            for(string s: para){
-                cout<<s<<endl;
-            }
+            if(para[0] == "register") reg(connfd, para);
 
             memset(srv_buff, 0, sizeof(srv_buff));
         }
@@ -90,7 +107,7 @@ int main(int argc, char** argv){
     memset(&srv_addr, 0, sizeof(srv_addr));
     srv_addr.sin_family = family;
     srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    srv_addr.sin_port = htons(13);
+    srv_addr.sin_port = htons(1234);
 
     Bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
 
