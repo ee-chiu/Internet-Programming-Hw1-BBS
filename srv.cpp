@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string>
+#include <vector>
 #include "my_function.h"
  
 using namespace std;
@@ -37,17 +38,42 @@ void exit_bbs(int connfd){
     return;
 }
 
+vector<string> split(string command){
+    vector<string> para;
+    string tmp;
+    int i = 0;
+    while(command[i] != 0){
+        if(command[i] == ' '){
+            para.push_back(tmp);
+            tmp.clear();
+            i++;
+            continue;
+        }
+        tmp += command[i];
+        i++;
+    }
+    para.push_back(tmp);
+    return para;
+}
+
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
         get_command(connfd);
         if(srv_buff[0] != 0){
             string command(srv_buff);
-            cout<<command;
-            if(command == "exit\n"){
+            command.pop_back();
+            cout<<command<<endl;
+            if(command == "exit"){
                 exit_bbs(connfd);
                 break;
             }
+
+            vector<string> para = split(command);
+            for(string s: para){
+                cout<<s<<endl;
+            }
+
             memset(srv_buff, 0, sizeof(srv_buff));
         }
     }
