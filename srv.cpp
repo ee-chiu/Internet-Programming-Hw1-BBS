@@ -12,14 +12,23 @@
  
 using namespace std;
 
-map<string, string> user2password;
 const int MAX_SIZE = 1000;
 char cli_buff[MAX_SIZE];
 char srv_buff[MAX_SIZE];
+map<string, string> user2password;
+bool isLogin = false;
+string user = "";
 
 void write2cli(int connfd,const char * message){
     snprintf(cli_buff, sizeof(cli_buff), "%s", message);
     Write(connfd, cli_buff, strlen(cli_buff));
+    return;
+}
+
+void write2cli2(int connfd, const char * text, const char * user){
+    snprintf(cli_buff, sizeof(cli_buff), "%s, %s.\n", text, user);
+    Write(connfd, cli_buff, strlen(cli_buff));
+    return;
 }
 
 void bbs_start(int connfd){
@@ -69,6 +78,54 @@ void reg(int connfd, vector<string> &para){
     return;
 }
 
+void login(int connfd, vector<string> &para){
+    if(para.size() != 3){
+        write2cli(connfd, "Usage: login <username> <password>\n");
+        return;
+    }
+
+    if(isLogin){
+        write2cli(connfd, "Please logout first.\n");
+        return;
+    }
+
+    auto itr = user2password.find(para[1]);
+    if(itr == user2password.end()){
+        write2cli(connfd, "Login failed.\n");
+        return;
+    }
+
+    if(user2password[para[1]] != para[2]){
+        write2cli(connfd, "Login failed.\n");
+        return;
+    }
+
+    write2cli2(connfd, "Welcome", para[1].c_str());
+    isLogin = true;
+    user = para[1];
+}
+
+void who(int connfd){
+    if(!isLogin){
+        write2cli(connfd, "Please login first.\n");
+        return;
+    }
+    snprintf(cli_buff, sizeof(cli_buff), "%s\n", user.c_str());
+    Write(connfd, cli_buff, strlen(cli_buff));
+    return;
+}
+
+void logout(int connfd){
+    if(!isLogin){
+        write2cli(connfd, "Please login first.\n");
+        return;
+    }
+    isLogin = false;
+    write2cli2(connfd, "Bye", user.c_str());
+    user.clear();
+    return;
+}
+
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
@@ -84,7 +141,9 @@ void bbs_main(int connfd){
 
             vector<string> para = split(command);
             if(para[0] == "register") reg(connfd, para);
-
+            else if(para[0] == "login") login(connfd, para);
+            else if(para[0] == "whoami") who(connfd);
+            else if(para[0] == "logout") logout(connfd);
             memset(srv_buff, 0, sizeof(srv_buff));
         }
     }
