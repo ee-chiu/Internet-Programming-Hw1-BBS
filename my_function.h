@@ -69,4 +69,14 @@ int Read(int socket, void* buffer, unsigned int size){
     return r;
 }
 
+ssize_t Write(int connfd, const char * cli_buff, size_t nbyte){
+    ssize_t w = write(connfd, cli_buff, strlen(cli_buff));
+    if (w < 0){
+        perror("Write error");
+        exit(0);
+    }
+
+    return w;
+}
+
 

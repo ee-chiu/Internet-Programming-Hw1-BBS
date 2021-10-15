@@ -15,21 +15,18 @@ const int MAX_SIZE = 1000;
 char cli_buff[MAX_SIZE];
 char srv_buff[MAX_SIZE];
 
+void write2cli(int connfd,const char * message){
+    snprintf(cli_buff, sizeof(cli_buff), "%s", message);
+    Write(connfd, cli_buff, strlen(cli_buff));
+}
+
 void bbs_start(int connfd){
-    snprintf(cli_buff, sizeof(cli_buff), "********************************\n** Welcome to the BBS server. **\n********************************\n");
-    if (write(connfd, cli_buff, strlen(cli_buff)) < 0){
-        perror("Write error");
-        exit(0);
-    }
+    write2cli(connfd, "********************************\n** Welcome to the BBS server. **\n********************************\n");
     return;
 }
 
 void exit_bbs(int connfd){
-    snprintf(cli_buff, sizeof(cli_buff), "bye\n");
-    if (write(connfd, cli_buff, strlen(cli_buff)) < 0){
-        perror("Write error");
-        exit(0);
-    }
+    write2cli(connfd, "bye\n");
     return;
 }
 
@@ -54,6 +51,7 @@ vector<string> split(string command){
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
+        write2cli(connfd, "% ");
         Read(connfd, srv_buff, sizeof(srv_buff));
         if(srv_buff[0] != 0){
             string command(srv_buff);
