@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <string>
 #include "my_function.h"
  
 using namespace std;
@@ -41,8 +42,9 @@ void bbs_main(int connfd){
     while(1){
         get_command(connfd);
         if(srv_buff[0] != 0){
-            printf("%s", srv_buff);
-            if(strcmp(srv_buff, "exit\n") == 0){
+            string command(srv_buff);
+            cout<<command;
+            if(command == "exit\n"){
                 exit_bbs(connfd);
                 break;
             }
