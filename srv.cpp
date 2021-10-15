@@ -36,6 +36,22 @@ void exit_bbs(int connfd){
     return;
 }
 
+void bbs_main(int connfd){
+    bbs_start(connfd);
+    while(1){
+        get_command(connfd);
+        if(srv_buff[0] != 0){
+            printf("%s", srv_buff);
+            if(strcmp(srv_buff, "exit\n") == 0){
+                exit_bbs(connfd);
+                break;
+            }
+            memset(srv_buff, 0, sizeof(srv_buff));
+        }
+    }
+    return;
+}
+
 int main(int argc, char** argv){
     const int family = AF_INET;
     const int type = SOCK_STREAM;
@@ -65,24 +81,14 @@ int main(int argc, char** argv){
         if((pid = fork()) == 0){
             Close(listenfd);
 
-            bbs_start(connfd);
-            while(1){
-                get_command(connfd);
-                if(srv_buff[0] != 0){
-                    printf("%s", srv_buff);
-                    if(strcmp(srv_buff, "exit\n") == 0){
-                    exit_bbs(connfd);
-                    break;
-                    }
-                    memset(srv_buff, 0, sizeof(srv_buff));
-                }
-            }
-
+            bbs_main(connfd);
+            
             Close(connfd);
             exit(0);
         }
 
         Close(connfd);
+        sleep(1);
     }
 
     return 0;    
