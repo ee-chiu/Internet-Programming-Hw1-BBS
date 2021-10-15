@@ -24,11 +24,6 @@ void bbs_start(int connfd){
     return;
 }
 
-void get_command(int connfd){
-    Read(connfd, srv_buff, sizeof(srv_buff));
-    return;
-}
-
 void exit_bbs(int connfd){
     snprintf(cli_buff, sizeof(cli_buff), "bye\n");
     if (write(connfd, cli_buff, strlen(cli_buff)) < 0){
@@ -59,7 +54,7 @@ vector<string> split(string command){
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
-        get_command(connfd);
+        Read(connfd, srv_buff, sizeof(srv_buff));
         if(srv_buff[0] != 0){
             string command(srv_buff);
             command.pop_back();
