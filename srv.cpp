@@ -21,6 +21,16 @@ bool isLogin = false;
 string user = "";
 map< string, map< string, queue<string> > > user2other_user_message;
 
+int char2int(const char * c){
+    int num = 0;
+    int i = 0;
+    while(c[i] != 0){
+        num = num * 10 + (c[i] - '0');
+        i++;
+    }
+    return num;
+}
+
 void write2cli(int connfd,const char * message){
     snprintf(cli_buff, sizeof(cli_buff), "%s", message);
     Write(connfd, cli_buff, strlen(cli_buff));
@@ -266,7 +276,8 @@ int main(int argc, char** argv){
     memset(&srv_addr, 0, sizeof(srv_addr));
     srv_addr.sin_family = family;
     srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    srv_addr.sin_port = htons(1234);
+    int num = char2int(argv[1]);
+    srv_addr.sin_port = htons(num);
 
     Bind(listenfd, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
 
