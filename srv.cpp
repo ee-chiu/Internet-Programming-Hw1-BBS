@@ -208,6 +208,11 @@ void receive(int connfd, const vector<string> &para){
         write2cli(connfd, "Usage: receive <username>\n");
         return;
     }
+
+    if(!isLogin){
+        write2cli(connfd, "Please login first.\n");
+        return;
+    }
     
     auto itr = user2password.find(para[1]);
     if(itr == user2password.end()){
