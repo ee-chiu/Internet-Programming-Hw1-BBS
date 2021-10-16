@@ -8,16 +8,18 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <queue>
 #include "my_function.h"
  
 using namespace std;
 
-const int MAX_SIZE = 1000;
+const int MAX_SIZE = 10000;
 char cli_buff[MAX_SIZE];
 char srv_buff[MAX_SIZE];
 map<string, string> user2password;
 bool isLogin = false;
 string user = "";
+map< string, map< string, queue<string> > > user2other_user_message;
 
 void write2cli(int connfd,const char * message){
     snprintf(cli_buff, sizeof(cli_buff), "%s", message);
@@ -46,6 +48,10 @@ vector<string> split(string command){
     string tmp;
     int i = 0;
     while(command[i] != 0){
+        if(command[i] == '"') {
+            i++;
+            break;
+        }
         if(command[i] == ' '){
             para.push_back(tmp);
             tmp.clear();
@@ -57,11 +63,18 @@ vector<string> split(string command){
         tmp += command[i];
         i++;
     }
-    para.push_back(tmp);
+
+    while(command[i] != 0 && command[i] != '"'){
+        tmp += command[i];
+        i++;
+    }
+    
+    if(!tmp.empty())
+        para.push_back(tmp);
     return para;
 }
 
-void reg(int connfd, vector<string> &para){
+void reg(int connfd,const vector<string> &para){
     if(para.size() != 3){
         write2cli(connfd, "Usage: register <username> <password>\n");
         return;
@@ -78,7 +91,7 @@ void reg(int connfd, vector<string> &para){
     return;
 }
 
-void login(int connfd, vector<string> &para){
+void login(int connfd,const vector<string> &para){
     if(para.size() != 3){
         write2cli(connfd, "Usage: login <username> <password>\n");
         return;
@@ -134,6 +147,76 @@ void list_user(int connfd){
     return;
 }
 
+void send(int connfd, const vector<string> &para){
+    if(para.size() != 3){
+        write2cli(connfd, "Usage: send <username> <message>\n");
+        return;
+    }
+
+    if(!isLogin){
+        write2cli(connfd, "Please login first.\n");
+        return;
+    }
+    
+    auto itr = user2password.find(para[1]);
+    if(itr == user2password.end()){
+        write2cli(connfd, "User not existed.\n");
+        return;
+    }
+
+    user2other_user_message[para[1]][user].push(para[2]+"\n");
+    return;
+}
+
+void list_message(int connfd){
+    if(!isLogin){
+        write2cli(connfd, "Please login first.\n");
+        return;
+    }
+
+    map<string, queue<string>> message_box = user2other_user_message[user];
+    if(message_box.empty()){
+        write2cli(connfd, "Your message box is empty.\n");
+        return;
+    }
+
+    bool has_message = false;
+    for(auto itr = message_box.begin(); itr != message_box.end(); itr++){
+        if(itr->second.size() == 0) continue;
+        snprintf(cli_buff, sizeof(cli_buff), "%zu message from %s.\n", itr->second.size(), itr->first.c_str());
+        Write(connfd, cli_buff, strlen(cli_buff));
+        has_message = true;
+    }
+
+    if(!has_message) write2cli(connfd, "Your message box is empty.\n");
+
+    return;
+}
+
+void receive(int connfd, const vector<string> &para){
+    if(para.size() != 2){
+        write2cli(connfd, "Usage: receive <username>\n");
+        return;
+    }
+    
+    auto itr = user2password.find(para[1]);
+    if(itr == user2password.end()){
+        write2cli(connfd, "User not existed.\n");
+        return;
+    }
+
+    map<string, queue<string>> message_box = user2other_user_message[user];
+    auto itr2 = message_box.find(para[1]);
+    
+    if(itr2 == message_box.end()) return;
+    if(message_box[para[1]].empty()) return;
+    
+    string message = message_box[para[1]].front();
+    user2other_user_message[user][para[1]].pop();
+
+    write2cli(connfd, message.c_str());
+}
+
 void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
@@ -147,6 +230,8 @@ void bbs_main(int connfd){
                     snprintf(cli_buff, sizeof(cli_buff), "Bye, %s.", user.c_str());
                     Write(connfd, cli_buff, strlen(cli_buff));
                 }
+                isLogin = false;
+                user.clear();                
                 break;
             }
 
@@ -156,6 +241,9 @@ void bbs_main(int connfd){
             else if(para[0] == "whoami") who(connfd);
             else if(para[0] == "logout") logout(connfd);
             else if(para[0] == "list-user") list_user(connfd);
+            else if(para[0] == "send") send(connfd, para);
+            else if(para[0] == "list-msg") list_message(connfd);
+            else if(para[0] == "receive") receive(connfd, para);
             memset(srv_buff, 0, sizeof(srv_buff));
         }
     }
