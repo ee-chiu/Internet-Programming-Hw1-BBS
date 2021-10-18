@@ -276,6 +276,10 @@ int main(int argc, char** argv){
     memset(cli_buff, 0, sizeof(cli_buff));
     memset(srv_buff, 0, sizeof(srv_buff));
 
+    if(argc != 2){
+        printf("Usage: ./srv <Port Number>\n");
+        exit(0);
+    }
     listenfd = Socket(family, type, protocol);
 
     memset(&srv_addr, 0, sizeof(srv_addr));
