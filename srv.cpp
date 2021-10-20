@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <pthread.h>
 #include "my_function.h"
  
 using namespace std;
@@ -262,7 +263,44 @@ void bbs_main(int connfd){
             memset(srv_buff, 0, sizeof(srv_buff));
         }
     }
+
+    Close(connfd);
     return;
+}
+
+void *bbs_main2(void* arg){
+    int connfd = *((int* )arg);
+    bbs_start(connfd);
+    while(1){
+        write2cli(connfd, "% ");
+        Read(connfd, srv_buff, sizeof(srv_buff));
+        if(srv_buff[0] != 0){
+            string command(srv_buff);
+            command.pop_back();
+            if(command == "exit"){
+                if(isLogin) {
+                    snprintf(cli_buff, sizeof(cli_buff), "Bye, %s.", user.c_str());
+                    Write(connfd, cli_buff, strlen(cli_buff));
+                }
+                isLogin = false;
+                user.clear();                
+                break;
+            }
+
+            vector<string> para = split(command);
+            if(para[0] == "register") reg(connfd, para);
+            else if(para[0] == "login") login(connfd, para);
+            else if(para[0] == "whoami") who(connfd);
+            else if(para[0] == "logout") logout(connfd);
+            else if(para[0] == "list-user") list_user(connfd);
+            else if(para[0] == "send") send(connfd, para);
+            else if(para[0] == "list-msg") list_message(connfd);
+            else if(para[0] == "receive") receive(connfd, para);
+            memset(srv_buff, 0, sizeof(srv_buff));
+        }
+    }
+
+    return NULL;
 }
 
 int main(int argc, char** argv){
@@ -295,18 +333,8 @@ int main(int argc, char** argv){
     while(1){
         connfd = Accept(listenfd);
 
-        bbs_main(connfd);
-        /*pid_t pid = -1;
-        if((pid = fork()) == 0){
-            Close(listenfd);
-
-            bbs_main(connfd);
-            
-            Close(connfd);
-            exit(0);
-        }*/
-
-        Close(connfd);
+        pthread_t child;
+        pthread_create(&child, NULL, &bbs_main2, (void*) &connfd);
     }
 
     return 0;    
