@@ -18,8 +18,6 @@ const int MAX_SIZE = 10000;
 char cli_buff[MAX_SIZE];
 char srv_buff[MAX_SIZE];
 map<string, string> user2password;
-bool isLogin = false;
-string user = "";
 map< string, map< string, queue<string> > > user2other_user_message;
 
 int char2int(const char * c){
@@ -85,7 +83,7 @@ vector<string> split(string command){
     return para;
 }
 
-void reg(int connfd,const vector<string> &para){
+void reg(int connfd,const vector<string> &para, bool &isLogin, string &user){
     if(para.size() != 3){
         write2cli(connfd, "Usage: register <username> <password>\n");
         return;
@@ -102,7 +100,7 @@ void reg(int connfd,const vector<string> &para){
     return;
 }
 
-void login(int connfd,const vector<string> &para){
+void login(int connfd,const vector<string> &para, bool &isLogin, string &user){
     if(para.size() != 3){
         write2cli(connfd, "Usage: login <username> <password>\n");
         return;
@@ -129,7 +127,7 @@ void login(int connfd,const vector<string> &para){
     user = para[1];
 }
 
-void who(int connfd){
+void who(int connfd, bool &isLogin, string &user){
     if(!isLogin){
         write2cli(connfd, "Please login first.\n");
         return;
@@ -139,7 +137,7 @@ void who(int connfd){
     return;
 }
 
-void logout(int connfd){
+void logout(int connfd, bool &isLogin, string &user){
     if(!isLogin){
         write2cli(connfd, "Please login first.\n");
         return;
@@ -150,7 +148,7 @@ void logout(int connfd){
     return;
 }
 
-void list_user(int connfd){
+void list_user(int connfd, bool &isLogin, string &user){
     for(auto it = user2password.begin(); it != user2password.end(); it++){
         snprintf(cli_buff, sizeof(cli_buff), "%s\n", it->first.c_str());
         Write(connfd, cli_buff, strlen(cli_buff));
@@ -158,7 +156,7 @@ void list_user(int connfd){
     return;
 }
 
-void send(int connfd, const vector<string> &para){
+void send(int connfd, const vector<string> &para, bool &isLogin, string &user){
     if(para.size() != 3){
         write2cli(connfd, "Usage: send <username> <message>\n");
         return;
@@ -179,7 +177,7 @@ void send(int connfd, const vector<string> &para){
     return;
 }
 
-void list_message(int connfd){
+void list_message(int connfd, bool &isLogin, string &user){
     if(!isLogin){
         write2cli(connfd, "Please login first.\n");
         return;
@@ -204,7 +202,7 @@ void list_message(int connfd){
     return;
 }
 
-void receive(int connfd, const vector<string> &para){
+void receive(int connfd, const vector<string> &para, bool &isLogin, string &user){
     if(para.size() != 2){
         write2cli(connfd, "Usage: receive <username>\n");
         return;
@@ -233,7 +231,7 @@ void receive(int connfd, const vector<string> &para){
     write2cli(connfd, message.c_str());
 }
 
-void bbs_main(int connfd){
+/*void bbs_main(int connfd){
     bbs_start(connfd);
     while(1){
         write2cli(connfd, "% ");
@@ -266,9 +264,11 @@ void bbs_main(int connfd){
 
     Close(connfd);
     return;
-}
+}*/
 
 void *bbs_main2(void* arg){
+    bool isLogin = false;
+    string user = "";
     int connfd = *((int* )arg);
     bbs_start(connfd);
     while(1){
@@ -288,18 +288,19 @@ void *bbs_main2(void* arg){
             }
 
             vector<string> para = split(command);
-            if(para[0] == "register") reg(connfd, para);
-            else if(para[0] == "login") login(connfd, para);
-            else if(para[0] == "whoami") who(connfd);
-            else if(para[0] == "logout") logout(connfd);
-            else if(para[0] == "list-user") list_user(connfd);
-            else if(para[0] == "send") send(connfd, para);
-            else if(para[0] == "list-msg") list_message(connfd);
-            else if(para[0] == "receive") receive(connfd, para);
+            if(para[0] == "register") reg(connfd, para, isLogin, user);
+            else if(para[0] == "login") login(connfd, para, isLogin, user);
+            else if(para[0] == "whoami") who(connfd, isLogin, user);
+            else if(para[0] == "logout") logout(connfd, isLogin, user);
+            else if(para[0] == "list-user") list_user(connfd, isLogin, user);
+            else if(para[0] == "send") send(connfd, para, isLogin, user);
+            else if(para[0] == "list-msg") list_message(connfd, isLogin, user);
+            else if(para[0] == "receive") receive(connfd, para, isLogin, user);
             memset(srv_buff, 0, sizeof(srv_buff));
         }
     }
 
+    Close(connfd);
     return NULL;
 }
 
